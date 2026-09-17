@@ -136,10 +136,20 @@ function ArquivoJson() {
 
 function Postgres(url) {
   const { Pool } = require("pg");
+
+  // Host interno do Render (`dpg-xxxx-a`) não usa SSL; o externo, com
+  // domínio completo, usa. Localhost também vai sem.
+  let comSsl = false;
+  try {
+    const host = new URL(url).hostname;
+    comSsl = host.includes(".") && host !== "localhost" && !host.startsWith("127.");
+  } catch (e) { /* URL estranha: segue sem SSL */ }
+
   const pool = new Pool({
     connectionString: url,
-    ssl: url.includes("localhost") ? false : { rejectUnauthorized: false }
+    ssl: comSsl ? { rejectUnauthorized: false } : false
   });
+  pool.on("error", (e) => console.error("[mesa] erro no pool do Postgres:", e.message));
 
   const pronto = pool.query(`
     create table if not exists lancamentos (
