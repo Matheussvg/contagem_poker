@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#166043" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1411" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Placar semanal de pôquer dos cinco.">
+<title>Mesa dos Cinco</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='28'%3E%E2%99%A0%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600;800&display=swap">
+<style>
+  :root{
+    color-scheme:light dark;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    --ground:#E9EDE7;
+    --surface:#FAFCF8;
+    --surface-2:#F0F3EC;
+    --line:#D3DBD0;
+    --line-strong:#B6C2B3;
+    --ink:#131C17;
+    --ink-2:#42544A;
+    --ink-3:#6E8075;
+    --felt:#166043;
+    --on-felt:#FFFFFF;
+    --felt-soft:#DCEBE1;
+    --brass:#9A6F14;
+    --brass-soft:#F2E6C8;
+    --up:#166043;
+    --down:#A8302A;
+    --up-soft:#DCEBE1;
+    --down-soft:#F6DEDB;
+    --chip-red:#C1352E;
+    --chip-green:#2E8B57;
+    --chip-blue:#2A5FA6;
+    --chip-white:#F4F3EE;
+    --shadow:0 1px 2px rgba(19,28,23,.06), 0 8px 24px -14px rgba(19,28,23,.35);
+    --radius:14px;
+    --display:"Oswald","Haettenschweiler","Arial Narrow",sans-serif;
+    --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+    --mono:"JetBrains Mono","Consolas",ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ground:#0D1411;
+      --surface:#151E19;
+      --surface-2:#1C2721;
+      --line:#2A382F;
+      --line-strong:#3D5046;
+      --ink:#E7EFE8;
+      --ink-2:#AFC0B4;
+      --ink-3:#88998E;
+      --felt:#3FA877;
+      --on-felt:#0D1411;
+      --felt-soft:#172E23;
+      --brass:#D9A84A;
+      --brass-soft:#2E2617;
+      --up:#4FBE89;
+      --down:#E8736A;
+      --up-soft:#16311F;
+      --down-soft:#331A18;
+      --chip-white:#E4E3DC;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 26px -16px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0D1411;
+    --surface:#151E19;
+    --surface-2:#1C2721;
+    --line:#2A382F;
+    --line-strong:#3D5046;
+    --ink:#E7EFE8;
+    --ink-2:#AFC0B4;
+    --ink-3:#88998E;
+    --felt:#3FA877;
+    --on-felt:#0D1411;
+    --felt-soft:#172E23;
+    --brass:#D9A84A;
+    --brass-soft:#2E2617;
+    --up:#4FBE89;
+    --down:#E8736A;
+    --up-soft:#16311F;
+    --down-soft:#331A18;
+    --chip-white:#E4E3DC;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 26px -16px rgba(0,0,0,.9);
+  }
+
+  *{box-sizing:border-box}
+  img{max-width:100%}
+  [hidden]{display:none !important}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--ground);
+    color:var(--ink);
+    font-family:var(--body);
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:.01em;margin:0;text-wrap:balance}
+  button{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--brass);outline-offset:2px;border-radius:6px}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .eyebrow{
+    font-family:var(--display);font-size:11px;font-weight:500;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+  }
+
+  /* ---------- gate ---------- */
+  #gate{
+    position:fixed;inset:0;z-index:60;display:grid;place-items:center;
+    padding:24px;background:var(--ground);
+  }
+  .gate-card{
+    width:100%;max-width:360px;background:var(--surface);
+    border:1px solid var(--line);border-radius:18px;padding:26px 22px;
+    box-shadow:var(--shadow);display:flex;flex-direction:column;gap:14px;
+  }
+  .gate-mark{display:flex;align-items:center;gap:10px}
+  .gate-mark .suits{font-size:20px;color:var(--felt);letter-spacing:2px}
+  .gate-card h1{font-size:30px;line-height:1.05;text-transform:uppercase}
+  .gate-card p{margin:0;color:var(--ink-2);font-size:14px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-family:var(--display);font-weight:500}
+  input[type=text],input[type=password],input[type=number],input[type=date]{
+    width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line-strong);
+    background:var(--surface-2);color:var(--ink);font:inherit;
+  }
+  input[type=number]{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .btn{
+    border:1px solid transparent;border-radius:10px;padding:11px 16px;cursor:pointer;
+    font-family:var(--display);font-weight:500;letter-spacing:.06em;text-transform:uppercase;font-size:14px;
+    background:var(--felt);color:var(--on-felt);transition:filter .15s ease, transform .06s ease;
+  }
+  .btn:hover{filter:brightness(1.08)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--ink-2);border-color:var(--line-strong)}
+  .gate-err{color:var(--down);font-size:13px;min-height:18px;margin:0}
+
+  /* ---------- app shell ---------- */
+  #app{display:none;flex-direction:column;min-height:100%}
+  #app.on{display:flex}
+
+  header.top{
+    position:sticky;top:env(safe-area-inset-top,0px);z-index:20;
+    background:color-mix(in srgb, var(--ground) 88%, transparent);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .top-inner{
+    max-width:1060px;margin:0 auto;padding:10px 16px;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:baseline;gap:9px;margin-right:auto;min-width:0}
+  .brand h1{font-size:19px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+  .brand .suits{color:var(--felt);font-size:13px;letter-spacing:1px}
+  .weekpill{
+    display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
+    border:1px solid var(--line-strong);border-radius:999px;padding:4px 11px;
+    background:var(--surface);font-size:12.5px;color:var(--ink-2);
+  }
+  .weekpill b{font-family:var(--display);font-weight:600;color:var(--ink);letter-spacing:.04em}
+  .weekpill .dot{width:7px;height:7px;border-radius:50%;background:var(--felt);box-shadow:0 0 0 3px var(--felt-soft)}
+  .iconbtn{
+    background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;
+    width:36px;height:36px;display:grid;place-items:center;cursor:pointer;color:var(--ink-2);flex:none;
+  }
+
+  main{max-width:1060px;width:100%;margin:0 auto;padding:18px 16px 96px;flex:1}
+  @media (min-width:800px){ main{padding-bottom:36px} }
+  .view{display:none;flex-direction:column;gap:18px}
+  .view.on{display:flex}
+
+  /* ---------- tabs ---------- */
+  nav.tabs{
+    position:fixed;left:0;right:0;bottom:0;z-index:30;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
+    background:var(--surface);border-top:1px solid var(--line);
+    padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));
+  }
+  nav.tabs button{
+    background:none;border:0;cursor:pointer;padding:7px 4px 5px;border-radius:10px;
+    display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink-3);
+    font-family:var(--display);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;
+  }
+  nav.tabs button svg{width:21px;height:21px}
+  nav.tabs button[aria-selected="true"]{color:var(--felt);background:var(--felt-soft)}
+  @media (min-width:800px){
+    nav.tabs{
+      position:static;display:flex;gap:4px;background:transparent;border:0;padding:0;
+      width:100%;order:3;border-top:1px solid var(--line);margin-top:8px;padding-top:6px;
+    }
+    nav.tabs button{flex-direction:row;padding:7px 14px;font-size:12.5px}
+    nav.tabs button svg{width:17px;height:17px}
+  }
+
+  /* ---------- placar ---------- */
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .section-head h2{font-size:24px;text-transform:uppercase;letter-spacing:.05em}
+  .section-head p{margin:0;color:var(--ink-3);font-size:13.5px;max-width:58ch}
+
+  .bank{
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;
+    background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+  }
+  .bank div{background:var(--surface);padding:11px 13px;display:flex;flex-direction:column;gap:2px}
+  .bank .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;font-size:19px}
+
+  .players{display:flex;flex-direction:column;gap:10px}
+  .player{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;box-shadow:var(--shadow);
+  }
+  .player.lead{border-color:var(--brass)}
+  .player-head{
+    width:100%;background:none;border:0;cursor:pointer;text-align:left;
+    display:grid;grid-template-columns:32px 1fr auto 18px;align-items:center;gap:11px;
+    padding:13px 14px;
+  }
+  .rank{
+    width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+    font-family:var(--display);font-weight:600;font-size:14px;
+    background:var(--surface-2);color:var(--ink-3);border:1px solid var(--line);
+  }
+  .player.lead .rank{background:var(--brass-soft);color:var(--brass);border-color:var(--brass)}
+  .pname{font-family:var(--display);font-size:19px;font-weight:500;letter-spacing:.03em;text-transform:uppercase;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pright{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+  .ptotal{font-family:var(--mono);font-weight:800;font-size:20px;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+  .pdelta{
+    font-family:var(--mono);font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:999px;
+    background:var(--surface-2);color:var(--ink-3);
+  }
+  .pdelta.up{background:var(--up-soft);color:var(--up)}
+  .pdelta.down{background:var(--down-soft);color:var(--down)}
+  .chev{color:var(--ink-3);transition:transform .18s ease;display:grid;place-items:center}
+  .player-head[aria-expanded="true"] .chev{transform:rotate(90deg)}
+
+  .player-body{border-top:1px dashed var(--line-strong);padding:13px 14px 15px;display:flex;flex-direction:column;gap:13px;background:var(--surface-2)}
+  .quick{display:flex;flex-wrap:wrap;gap:6px}
+  .quick button{
+    border:1px solid var(--line-strong);background:var(--surface);border-radius:999px;
+    padding:5px 10px 5px 6px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--mono);font-size:12.5px;font-weight:600;
+  }
+  .quick button:hover{border-color:var(--felt)}
+  .quick .swatch{width:15px;height:15px;border-radius:50%;border:2px dashed rgba(255,255,255,.75);box-shadow:0 0 0 1px rgba(0,0,0,.25) inset}
+  .quick .clear{font-family:var(--body);color:var(--ink-3);padding-left:10px}
+
+  .addrow{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+  .addrow .field{flex:1 1 120px;min-width:110px}
+  .addrow .acts{display:flex;gap:8px;flex:1 1 100%}
+  @media (min-width:560px){ .addrow .acts{flex:0 0 auto} }
+  .addrow .acts .btn{flex:1}
+  .btn.win{background:var(--up);color:var(--on-felt)}
+  .btn.lose{background:var(--down);color:var(--on-felt)}
+  .hint{margin:0;font-size:12.5px;color:var(--ink-3)}
+
+  ul.entries{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  ul.entries li{background:var(--surface);display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:10px;padding:8px 10px;font-size:14px}
+  ul.entries .d{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+  ul.entries .w{font-family:var(--display);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+  ul.entries .v{font-family:var(--mono);font-weight:600;font-variant-numeric:tabular-nums}
+  ul.entries .v.up{color:var(--up)} ul.entries .v.down{color:var(--down)}
+  .del{background:none;border:0;cursor:pointer;color:var(--ink-3);padding:3px;line-height:0;border-radius:6px}
+  .del:hover{color:var(--down)}
+  .empty{margin:0;font-size:13px;color:var(--ink-3);font-style:italic}
+
+  /* ---------- fichas ---------- */
+  .chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  @media (min-width:780px){ .chips{grid-template-columns:repeat(4,minmax(0,1fr))} }
+  .chipcard{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 12px 12px;display:flex;flex-direction:column;align-items:center;gap:9px;
+    box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .chipcard::after{content:"";position:absolute;inset:auto 0 0 0;height:3px;background:var(--cc)}
+  .stage{width:100%;aspect-ratio:1/1;display:grid;place-items:center;position:relative}
+  .stage model-viewer{width:100%;height:100%;background:transparent;--poster-color:transparent}
+  .flat{
+    width:74%;aspect-ratio:1/1;border-radius:50%;background:var(--cc);
+    display:grid;place-items:center;position:relative;
+    box-shadow:0 6px 14px -8px rgba(0,0,0,.6), inset 0 -4px 10px rgba(0,0,0,.28), inset 0 3px 8px rgba(255,255,255,.28);
+  }
+  .flat::before{
+    content:"";position:absolute;inset:7%;border-radius:50%;
+    border:7px dashed rgba(255,255,255,.85);opacity:.9;
+  }
+  .flat::after{
+    content:"";position:absolute;inset:20%;border-radius:50%;background:var(--cc);
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.55), 0 0 0 1px rgba(0,0,0,.18);
+  }
+  .flat span{
+    position:relative;z-index:2;font-family:var(--display);font-weight:600;font-size:clamp(15px,5.4vw,24px);
+    color:var(--cft);letter-spacing:.02em;
+  }
+  .chipcard[data-chip="branca"] .flat::before{border-color:rgba(60,60,55,.45)}
+  .chipcard[data-chip="branca"] .flat::after{box-shadow:inset 0 0 0 2px rgba(60,60,55,.35), 0 0 0 1px rgba(0,0,0,.12)}
+  .chipname{font-family:var(--display);font-size:15px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-2)}
+  .chipval{font-family:var(--mono);font-weight:800;font-size:23px;letter-spacing:-.03em}
+
+  .counter{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:15px 14px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+  .counter h3{font-size:17px;text-transform:uppercase;letter-spacing:.07em}
+  .countrows{display:flex;flex-direction:column;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .countrow{background:var(--surface);display:grid;grid-template-columns:20px 1fr auto auto;align-items:center;gap:10px;padding:9px 11px}
+  .countrow .sw{width:19px;height:19px;border-radius:50%;background:var(--cc);border:2px dashed rgba(255,255,255,.8);box-shadow:0 0 0 1px rgba(0,0,0,.22)}
+  .countrow[data-chip="branca"] .sw{border-color:rgba(60,60,55,.5)}
+  .countrow .lbl{font-size:14px}
+  .countrow .lbl small{color:var(--ink-3);font-family:var(--mono);font-size:12px;margin-left:6px}
+  .stepper{display:flex;align-items:center;gap:4px}
+  .stepper button{width:30px;height:30px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface-2);cursor:pointer;font-family:var(--mono);font-weight:600;line-height:1}
+  .stepper input{width:54px;text-align:center;padding:5px 2px}
+  .countrow .sub{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13.5px;color:var(--ink-2);min-width:74px;text-align:right}
+  .counttotal{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:2px}
+  .counttotal .v{font-family:var(--mono);font-weight:800;font-size:26px;letter-spacing:-.03em;color:var(--felt)}
+
+  /* ---------- histórico ---------- */
+  .weeks{display:flex;flex-direction:column;gap:12px}
+  .week{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .week header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .week header h3{font-size:17px;text-transform:uppercase;letter-spacing:.07em}
+  .week header .range{font-family:var(--mono);font-size:12px;color:var(--ink-3);margin-right:auto}
+  .tag{font-family:var(--display);font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:2px 9px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink-3)}
+  .tag.live{border-color:var(--felt);color:var(--felt);background:var(--felt-soft)}
+  .standings{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px;background:var(--line)}
+  .standings li{background:var(--surface);display:grid;grid-template-columns:26px 1fr auto auto;align-items:center;gap:10px;padding:9px 14px}
+  .standings .pos{font-family:var(--display);font-weight:600;color:var(--ink-3);font-size:13px}
+  .standings .nm{font-family:var(--display);letter-spacing:.04em;text-transform:uppercase;font-size:15px}
+  .standings .fin{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;font-size:15px;min-width:72px;text-align:right}
+  .standings .res{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--ink-3);min-width:62px;text-align:center}
+  .standings .res.up{background:var(--up-soft);color:var(--up)}
+  .standings .res.down{background:var(--down-soft);color:var(--down)}
+  .standings li.first .nm{color:var(--brass)}
+
+  .note{display:flex;gap:9px;align-items:flex-start;border:1px dashed var(--line-strong);border-radius:12px;padding:11px 13px;color:var(--ink-2);font-size:13px;background:var(--surface)}
+  .note b{color:var(--ink)}
+  footer.foot{max-width:1060px;margin:0 auto;padding:0 16px 22px;color:var(--ink-3);font-size:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .storage{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+  .storage .dot{width:6px;height:6px;border-radius:50%;background:var(--ink-3)}
+  .storage.sync .dot{background:var(--felt)}
+  .storage.local .dot{background:var(--brass)}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <form class="gate-card" id="gateForm">
+    <div class="gate-mark"><span class="suits">♠ ♥ ♦ ♣</span><span class="eyebrow">Mesa privada</span></div>
+    <h1>Mesa dos Cinco</h1>
+    <p>Placar semanal do Fortunato, Galdino, Jonatas, Pedro e Lucas.</p>
+    <div class="field">
+      <label for="gu">Login</label>
+      <input id="gu" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="admin">
+    </div>
+    <div class="field">
+      <label for="gp">Senha</label>
+      <input id="gp" type="password" autocomplete="current-password" placeholder="admin">
+    </div>
+    <p class="gate-err" id="gateErr" role="alert"></p>
+    <button class="btn" type="submit">Entrar na mesa</button>
+  </form>
+</div>
+
+<div id="app">
+  <header class="top">
+    <div class="top-inner">
+      <div class="brand"><span class="suits">♠♥♦♣</span><h1>Mesa dos Cinco</h1></div>
+      <span class="weekpill"><span class="dot"></span>Semana <b id="weekNo">1</b> · <span class="num" id="weekRange">—</span></span>
+      <button class="iconbtn" id="logout" type="button" title="Sair" aria-label="Sair da mesa">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17l5-5-5-5"/><path d="M20 12H9"/><path d="M12 19H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/></svg>
+      </button>
+      <nav class="tabs" role="tablist" aria-label="Seções">
+        <button role="tab" id="tab-fichas" aria-controls="view-fichas" aria-selected="false" data-view="fichas">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3"/></svg>
+          Fichas
+        </button>
+        <button role="tab" id="tab-placar" aria-controls="view-placar" aria-selected="true" data-view="placar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+          Placar
+        </button>
+        <button role="tab" id="tab-historico" aria-controls="view-historico" aria-selected="false" data-view="historico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3 4v4h4"/><path d="M12 7.5V12l3 2"/></svg>
+          Histórico
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ======= FICHAS ======= -->
+    <section class="view" id="view-fichas" role="tabpanel" aria-labelledby="tab-fichas">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Tabela da casa</p>
+          <h2>Valor das fichas</h2>
+        </div>
+        <p>Arraste a ficha para girar. Os valores abaixo valem para todas as mesas — ninguém paga diferente.</p>
+      </div>
+
+      <div class="chips" id="chips"></div>
+
+      <div class="counter">
+        <h3>Contador de pilha</h3>
+        <p class="hint">Conte as fichas na frente do jogador e confira quanto ele tem em mesa.</p>
+        <div class="countrows" id="countrows"></div>
+        <div class="counttotal">
+          <span class="eyebrow">Total em mesa</span>
+          <span class="v num" id="countTotal">R$ 0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======= PLACAR ======= -->
+    <section class="view on" id="view-placar" role="tabpanel" aria-labelledby="tab-placar">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Semana em andamento</p>
+          <h2>Placar da semana</h2>
+        </div>
+        <p>Todo mundo abre a semana com <b class="num">R$&nbsp;475</b>. Lance o resultado do dia e o saldo se atualiza para os cinco.</p>
+      </div>
+
+      <div class="bank">
+        <div><span class="eyebrow">Início</span><span class="v" id="bankStart">R$ 475</span></div>
+        <div><span class="eyebrow">Em jogo</span><span class="v" id="bankPot">R$ 2.375</span></div>
+        <div><span class="eyebrow">Vira</span><span class="v" id="bankReset">sex 00:00</span></div>
+      </div>
+
+      <div class="players" id="players"></div>
+
+      <div class="note">
+        <span aria-hidden="true">♠</span>
+        <div>A semana corre de <b>sexta</b> a <b>quinta</b>. Na virada de quinta para sexta, às 00:00, o placar é arquivado no histórico e todos voltam para R$&nbsp;475 — não precisa fechar nada na mão.</div>
+      </div>
+    </section>
+
+    <!-- ======= HISTÓRICO ======= -->
+    <section class="view" id="view-historico" role="tabpanel" aria-labelledby="tab-historico">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Temporada</p>
+          <h2>Semanas anteriores</h2>
+        </div>
+        <p>Saldo final de cada semana e o resultado contra os R$&nbsp;475 de entrada.</p>
+      </div>
+      <div class="weeks" id="weeks"><p class="empty">Carregando…</p></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span class="storage" id="storageBadge"><span class="dot"></span><span id="storageLabel">conectando…</span></span>
+    <span>Entrada de R$ 475 · vermelha 10 · verde 15 · azul 20 · branca 50</span>
+  </footer>
+</div>
+
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ============ constantes do jogo ============ */
+  var ENTRADA = 475;
+  var JOGADORES = [
+    {id:"fortunato", nome:"Fortunato"},
+    {id:"galdino",   nome:"Galdino"},
+    {id:"jonatas",   nome:"Jonatas"},
+    {id:"pedro",     nome:"Pedro"},
+    {id:"lucas",     nome:"Lucas"}
+  ];
+  var FICHAS = [
+    {id:"vermelha", nome:"Vermelha", valor:10, cor:"#C1352E", tinta:"#FFF1EF", glb:"fichas/vermelha-10.glb"},
+    {id:"verde",    nome:"Verde",    valor:15, cor:"#2E8B57", tinta:"#EFFBF3", glb:"fichas/verde-15.glb"},
+    {id:"azul",     nome:"Azul",     valor:20, cor:"#2A5FA6", tinta:"#EFF5FF", glb:"fichas/azul-20.glb"},
+    {id:"branca",   nome:"Branca",   valor:50, cor:"#F4F3EE", tinta:"#2A2A24", glb:"fichas/branca-50.glb"}
+  ];
+  var DIAS = ["dom","seg","ter","qua","qui","sex","sáb"];
+
+  /* ============ utilidades ============ */
+  function $(s,r){ return (r||document).querySelector(s); }
+  function el(tag,cls,txt){ var n=document.createElement(tag); if(cls) n.className=cls; if(txt!=null) n.textContent=txt; return n; }
+
+  function fmt(n){
+    var neg = n < 0, a = Math.abs(n);
+    var s = (Math.round(a*100)%100===0) ? String(Math.round(a)) : a.toFixed(2).replace(".",",");
+    s = s.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    return (neg?"−":"") + "R$ " + s;
+  }
+  function sinal(n){
+    var s = fmt(Math.abs(n)).replace("R$ ","");
+    return (n>0?"+":n<0?"−":"") + s;
+  }
+  function iso(d){
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+  function fromIso(s){ var p=String(s).split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function curto(s){ var d=fromIso(s); return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0"); }
+
+  // Semana de poker: sexta 00:00 → quinta 23:59
+  function inicioSemana(ref){
+    var d = ref ? new Date(ref) : new Date();
+    d.setHours(0,0,0,0);
+    var diff = (d.getDay() - 5 + 7) % 7;   // 5 = sexta
+    d.setDate(d.getDate() - diff);
+    return d;
+  }
+  function fimSemana(inicioIso){
+    var d = fromIso(inicioIso); d.setDate(d.getDate()+6); return iso(d);
+  }
+
+  var semanaAtual = iso(inicioSemana());
+
+  /* ============ armazenamento ============ */
+  /* Tudo passa pelo servidor, então os cinco enxergam o mesmo placar.
+     A sessão vive num cookie assinado; aqui só falamos com a API.   */
+
+  var logado = false;
+
+  function api(metodo, rota, corpo){
+    return fetch(rota, {
+      method: metodo,
+      credentials: "same-origin",
+      headers: corpo ? {"Content-Type":"application/json"} : undefined,
+      body: corpo ? JSON.stringify(corpo) : undefined
+    }).then(function(r){
+      if (r.status === 401){ sair(true); throw new Error("sessao"); }
+      if (!r.ok) throw new Error("http " + r.status);
+      return r.status === 204 ? null : r.json();
+    });
+  }
+
+  function ApiStore(){
+    var assinantes = [];
+    var semanaAberta = null;
+    var timer = null;
+
+    function puxar(){
+      if (!semanaAberta || !logado) return Promise.resolve();
+      return api("GET", "api/semanas/" + semanaAberta).then(function(d){
+        var out = {};
+        JOGADORES.forEach(function(j){
+          out[j.id] = (d && d.lancamentos && d.lancamentos[j.id]) || [];
+        });
+        assinantes.forEach(function(f){ f(out); });
+        setBadge("sync", "placar compartilhado");
+      }).catch(function(e){
+        if (!e || e.message !== "sessao") setBadge("off", "sem conexão com o servidor");
+      });
+    }
+
+    function ritmo(){
+      clearTimeout(timer);
+      timer = setTimeout(function(){ puxar().then(ritmo); }, document.hidden ? 60000 : 9000);
+    }
+    document.addEventListener("visibilitychange", function(){
+      if (!document.hidden && semanaAberta) puxar().then(ritmo);
+    });
+
+    return {
+      watchWeek: function(wk, cb){
+        semanaAberta = wk;
+        assinantes.push(cb);
+        puxar().then(ritmo);
+        return function(){
+          var i = assinantes.indexOf(cb);
+          if (i >= 0) assinantes.splice(i, 1);
+          if (!assinantes.length){ clearTimeout(timer); semanaAberta = null; }
+        };
+      },
+      add: function(wk, pid, entry){
+        return api("POST", "api/semanas/" + wk + "/lancamentos",
+                   {jogador: pid, valor: entry.valor, dia: entry.dia})
+          .then(puxar)
+          .catch(function(e){
+            if (!e || e.message !== "sessao") alert("Não deu para salvar o lançamento. Confira a conexão e tente de novo.");
+          });
+      },
+      remove: function(wk, pid, eid){
+        return api("DELETE", "api/semanas/" + wk + "/lancamentos/" + encodeURIComponent(eid))
+          .then(puxar)
+          .catch(function(e){
+            if (!e || e.message !== "sessao") alert("Não deu para apagar o lançamento. Tente de novo.");
+          });
+      },
+      weeks: function(){
+        return api("GET", "api/semanas").then(function(d){ return (d && d.semanas) || []; });
+      }
+    };
+  }
+
+  var store = ApiStore();
+  var unwatch = null;
+  var dados = {};
+  JOGADORES.forEach(function(j){ dados[j.id] = []; });
+
+  function setBadge(kind, label){
+    var b = $("#storageBadge");
+    b.className = "storage " + kind;
+    $("#storageLabel").textContent = label;
+  }
+  setBadge("off","conectando…");
+
+  /* ============ porta de entrada ============ */
+  function entrar(){
+    logado = true;
+    $("#gate").hidden = true;
+    $("#app").classList.add("on");
+    assinar();
+    carregarHistorico();
+  }
+  function sair(expirou){
+    logado = false;
+    if (unwatch){ try{ unwatch(); }catch(e){} unwatch = null; }
+    $("#app").classList.remove("on");
+    $("#gate").hidden = false;
+    $("#gp").value = "";
+    $("#gateErr").textContent = expirou ? "A sessão expirou. Entre de novo." : "";
+  }
+
+  fetch("api/sessao", {credentials:"same-origin"})
+    .then(function(r){ return r.json(); })
+    .then(function(s){ if (s && s.ok) entrar(); else $("#gu").focus(); })
+    .catch(function(){ $("#gateErr").textContent = "Servidor fora do ar. Recarregue em instantes."; });
+
+  $("#gateForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var u = $("#gu").value.trim(), p = $("#gp").value;
+    $("#gateErr").textContent = "";
+    fetch("api/login", {
+      method:"POST", credentials:"same-origin",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({usuario:u, senha:p})
+    }).then(function(r){ return r.json().catch(function(){ return {}; }); })
+      .then(function(d){
+        if (d && d.ok) entrar();
+        else {
+          $("#gateErr").textContent = "Login ou senha não conferem.";
+          $("#gp").value = ""; $("#gp").focus();
+        }
+      })
+      .catch(function(){ $("#gateErr").textContent = "Servidor fora do ar. Tente de novo em instantes."; });
+  });
+  $("#logout").addEventListener("click", function(){
+    fetch("api/logout", {method:"POST", credentials:"same-origin"}).catch(function(){});
+    sair(false);
+  });
+
+  /* ============ abas ============ */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('nav.tabs button'));
+  tabs.forEach(function(t){
+    t.addEventListener("click", function(){
+      tabs.forEach(function(o){
+        var on = o === t;
+        o.setAttribute("aria-selected", on ? "true" : "false");
+        $("#view-" + o.dataset.view).classList.toggle("on", on);
+      });
+      if (t.dataset.view === "historico") carregarHistorico();
+      window.scrollTo({top:0, behavior:"instant"});
+    });
+  });
+
+  /* ============ aba fichas ============ */
+  var chipsBox = $("#chips");
+  FICHAS.forEach(function(f){
+    var card = el("div","chipcard");
+    card.dataset.chip = f.id;
+    card.style.setProperty("--cc", f.cor);
+    card.style.setProperty("--cft", f.tinta);
+
+    var stage = el("div","stage");
+    var flat = el("div","flat");
+    flat.appendChild(el("span",null,"R$ "+f.valor));
+    stage.appendChild(flat);
+
+    card.appendChild(stage);
+    card.appendChild(el("div","chipname",f.nome));
+    card.appendChild(el("div","chipval","R$ "+f.valor));
+    chipsBox.appendChild(card);
+
+    montar3d(f, stage, flat);
+  });
+
+  // A ficha desenhada aparece de imediato; o modelo 3D entra por cima
+  // quando o visualizador carrega. Se não carregar, a ficha fica.
+  function montar3d(f, stage, flat){
+    if (!f.glb || !("customElements" in window)) return;
+    var pronto = false;
+    var timer = setTimeout(function(){ if(!pronto) limpar(); }, 12000);
+    var mv = null;
+
+    function limpar(){ if (mv && mv.parentNode) mv.parentNode.removeChild(mv); mv = null; }
+
+    customElements.whenDefined("model-viewer").then(function(){
+      mv = document.createElement("model-viewer");
+      mv.setAttribute("src", f.glb);
+      mv.setAttribute("loading", "eager");
+      mv.setAttribute("alt", "Ficha de pôquer " + f.nome.toLowerCase() + ", R$ " + f.valor);
+      mv.setAttribute("camera-controls","");
+      mv.setAttribute("touch-action","pan-y");
+      mv.setAttribute("disable-zoom","");
+      mv.setAttribute("shadow-intensity","0.6");
+      mv.setAttribute("exposure","1.05");
+      mv.setAttribute("camera-orbit","35deg 62deg auto");
+      mv.setAttribute("interaction-prompt","none");
+      mv.style.position = "absolute";
+      mv.style.inset = "0";
+      mv.style.opacity = "0";
+      mv.style.transition = "opacity .35s ease";
+      mv.addEventListener("load", function(){
+        pronto = true; clearTimeout(timer);
+        mv.style.opacity = "1";
+        flat.style.opacity = "0";
+        flat.style.transition = "opacity .35s ease";
+      });
+      mv.addEventListener("error", function(){ clearTimeout(timer); limpar(); });
+      stage.appendChild(mv);
+    }).catch(function(){ clearTimeout(timer); });
+  }
+
+  // contador de pilha
+  var contagem = {};
+  var rowsBox = $("#countrows");
+  FICHAS.forEach(function(f){
+    contagem[f.id] = 0;
+    var row = el("div","countrow");
+    row.dataset.chip = f.id;
+    row.style.setProperty("--cc", f.cor);
+    row.appendChild(el("span","sw"));
+    var lbl = el("span","lbl", f.nome);
+    lbl.appendChild(el("small",null,"R$ "+f.valor));
+    row.appendChild(lbl);
+
+    var step = el("div","stepper");
+    var menos = el("button",null,"−"); menos.type="button"; menos.setAttribute("aria-label","Menos uma ficha "+f.nome);
+    var inp = document.createElement("input");
+    inp.type="number"; inp.min="0"; inp.step="1"; inp.value="0"; inp.id = "cnt-"+f.id;
+    inp.setAttribute("aria-label","Quantidade de fichas "+f.nome);
+    var mais = el("button",null,"+"); mais.type="button"; mais.setAttribute("aria-label","Mais uma ficha "+f.nome);
+    step.appendChild(menos); step.appendChild(inp); step.appendChild(mais);
+    row.appendChild(step);
+
+    var sub = el("span","sub","R$ 0");
+    row.appendChild(sub);
+    rowsBox.appendChild(row);
+
+    function sync(){
+      var q = Math.max(0, Math.floor(+inp.value || 0));
+      inp.value = q; contagem[f.id] = q;
+      sub.textContent = fmt(q * f.valor);
+      var t = FICHAS.reduce(function(a,x){ return a + contagem[x.id]*x.valor; }, 0);
+      $("#countTotal").textContent = fmt(t);
+    }
+    menos.addEventListener("click", function(){ inp.value = Math.max(0,(+inp.value||0)-1); sync(); });
+    mais.addEventListener("click", function(){ inp.value = (+inp.value||0)+1; sync(); });
+    inp.addEventListener("input", sync);
+    sync();
+  });
+
+  /* ============ aba placar ============ */
+  var cards = {};
+  var playersBox = $("#players");
+
+  JOGADORES.forEach(function(j){
+    var art = el("article","player");
+    art.dataset.id = j.id;
+
+    var head = el("button","player-head");
+    head.type = "button";
+    head.setAttribute("aria-expanded","false");
+    var rank = el("span","rank","–");
+    var nome = el("span","pname", j.nome);
+    var right = el("span","pright");
+    var total = el("span","ptotal num", fmt(ENTRADA));
+    var delta = el("span","pdelta num","0");
+    right.appendChild(total); right.appendChild(delta);
+    var chev = el("span","chev");
+    chev.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+    head.appendChild(rank); head.appendChild(nome); head.appendChild(right); head.appendChild(chev);
+
+    var body = el("div","player-body");
+    body.hidden = true;
+
+    // atalhos de ficha
+    var quick = el("div","quick");
+    FICHAS.forEach(function(f){
+      var b = el("button",null); b.type="button";
+      var sw = el("span","swatch"); sw.style.background = f.cor;
+      if (f.id === "branca") sw.style.borderColor = "rgba(60,60,55,.5)";
+      b.appendChild(sw); b.appendChild(document.createTextNode(String(f.valor)));
+      b.setAttribute("aria-label","Somar uma ficha "+f.nome+" de R$ "+f.valor);
+      b.addEventListener("click", function(){
+        valor.value = String((+valor.value || 0) + f.valor);
+        valor.focus();
+      });
+      quick.appendChild(b);
+    });
+    var zerar = el("button","clear","limpar"); zerar.type="button";
+    zerar.addEventListener("click", function(){ valor.value = ""; valor.focus(); });
+    quick.appendChild(zerar);
+
+    var addrow = el("div","addrow");
+
+    var fVal = el("div","field");
+    var lVal = el("label",null,"Valor (R$)"); lVal.htmlFor = "val-"+j.id;
+    var valor = document.createElement("input");
+    valor.type="number"; valor.min="0"; valor.step="1"; valor.inputMode="numeric";
+    valor.id = "val-"+j.id; valor.placeholder="0";
+    fVal.appendChild(lVal); fVal.appendChild(valor);
+
+    var fDia = el("div","field");
+    var lDia = el("label",null,"Dia"); lDia.htmlFor = "dia-"+j.id;
+    var dia = document.createElement("input");
+    dia.type="date"; dia.id = "dia-"+j.id;
+    fDia.appendChild(lDia); fDia.appendChild(dia);
+
+    var acts = el("div","acts");
+    var bWin = el("button","btn win","Ganhei"); bWin.type="button";
+    var bLose = el("button","btn lose","Perdi"); bLose.type="button";
+    acts.appendChild(bWin); acts.appendChild(bLose);
+
+    addrow.appendChild(fVal); addrow.appendChild(fDia); addrow.appendChild(acts);
+
+    var lista = el("ul","entries");
+    var vazio = el("p","empty","Nenhum lançamento nesta semana.");
+
+    body.appendChild(quick);
+    body.appendChild(addrow);
+    body.appendChild(vazio);
+    body.appendChild(lista);
+
+    head.addEventListener("click", function(){
+      var open = head.getAttribute("aria-expanded") === "true";
+      head.setAttribute("aria-expanded", open ? "false" : "true");
+      body.hidden = open;
+      if (!open && !dia.value) dia.value = iso(new Date());
+    });
+
+    function lancar(sinalMult){
+      var v = Math.abs(+valor.value || 0);
+      if (!v){ valor.focus(); return; }
+      var d = dia.value || iso(new Date());
+      if (d < semanaAtual || d > fimSemana(semanaAtual)) d = iso(new Date());
+      valor.value = "";
+      store.add(semanaAtual, j.id, {valor: sinalMult * v, dia: d});
+    }
+    bWin.addEventListener("click", function(){ lancar(1); });
+    bLose.addEventListener("click", function(){ lancar(-1); });
+    valor.addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); lancar(1); } });
+
+    art.appendChild(head); art.appendChild(body);
+    playersBox.appendChild(art);
+
+    cards[j.id] = {art:art, rank:rank, total:total, delta:delta, lista:lista, vazio:vazio, dia:dia};
+  });
+
+  function render(){
+    var linhas = JOGADORES.map(function(j){
+      var es = dados[j.id] || [];
+      var soma = es.reduce(function(a,e){ return a + (+e.valor||0); }, 0);
+      return {j:j, es:es, total: ENTRADA + soma, delta: soma};
+    });
+    var ordem = linhas.slice().sort(function(a,b){ return b.total - a.total || a.j.nome.localeCompare(b.j.nome); });
+
+    var pot = 0;
+    ordem.forEach(function(l, i){
+      var c = cards[l.j.id];
+      c.art.style.order = String(i);
+      c.art.classList.toggle("lead", i === 0 && l.delta !== 0);
+      c.rank.textContent = String(i+1);
+      c.total.textContent = fmt(l.total);
+      c.delta.textContent = sinal(l.delta);
+      c.delta.className = "pdelta num " + (l.delta > 0 ? "up" : l.delta < 0 ? "down" : "");
+      pot += l.total;
+
+      c.lista.innerHTML = "";
+      c.vazio.hidden = l.es.length > 0;
+      l.es.slice().sort(function(a,b){ return a.dia < b.dia ? 1 : a.dia > b.dia ? -1 : ((a.criadoEm||"") < (b.criadoEm||"") ? 1 : -1); })
+        .forEach(function(e){
+          var li = document.createElement("li");
+          li.appendChild(el("span","w", DIAS[fromIso(e.dia).getDay()]));
+          li.appendChild(el("span","d", curto(e.dia)));
+          li.appendChild(el("span","v num " + (e.valor >= 0 ? "up" : "down"), sinal(e.valor)));
+          var del = el("button","del");
+          del.type = "button";
+          del.setAttribute("aria-label","Apagar lançamento de " + sinal(e.valor) + " em " + curto(e.dia));
+          del.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>';
+          del.addEventListener("click", function(){
+            if (confirm("Apagar o lançamento de " + sinal(e.valor) + " de " + l.j.nome + " em " + curto(e.dia) + "?"))
+              store.remove(semanaAtual, l.j.id, e.id);
+          });
+          li.appendChild(del);
+          c.lista.appendChild(li);
+        });
+    });
+
+    $("#bankPot").textContent = fmt(pot);
+  }
+
+  function pintarSemana(){
+    $("#weekRange").textContent = curto(semanaAtual) + " – " + curto(fimSemana(semanaAtual));
+    $("#bankStart").textContent = fmt(ENTRADA);
+    store.weeks().then(function(ws){
+      var idx = ws.map(function(w){ return w.inicio; }).sort();
+      var pos = idx.indexOf(semanaAtual);
+      $("#weekNo").textContent = String(pos >= 0 ? pos + 1 : idx.length + 1);
+    }).catch(function(){});
+  }
+
+  function assinar(){
+    if (unwatch) { try{ unwatch(); }catch(e){} }
+    JOGADORES.forEach(function(j){ dados[j.id] = []; });
+    render();
+    unwatch = store.watchWeek(semanaAtual, function(mapa){
+      dados = mapa;
+      render();
+    });
+    pintarSemana();
+  }
+
+  // vira a semana sozinho enquanto a página estiver aberta
+  setInterval(function(){
+    var agora = iso(inicioSemana());
+    if (logado && agora !== semanaAtual){
+      semanaAtual = agora;
+      assinar();
+      carregarHistorico();
+    }
+  }, 30000);
+
+  /* ============ aba histórico ============ */
+  function carregarHistorico(){
+    if (!logado) return;
+    var box = $("#weeks");
+    store.weeks().then(function(ws){
+      ws = ws.filter(function(w){ return w.inicio && w.totals; });
+      ws.sort(function(a,b){ return a.inicio < b.inicio ? 1 : -1; });
+      var ordemCresc = ws.map(function(w){ return w.inicio; }).slice().sort();
+
+      box.innerHTML = "";
+      if (!ws.length){
+        box.appendChild(el("p","empty","Nenhuma semana registrada ainda. Assim que o primeiro resultado for lançado, ela aparece aqui."));
+        return;
+      }
+      ws.forEach(function(w){
+        var card = el("div","week");
+        var h = document.createElement("header");
+        h.appendChild(el("h3", null, "Semana " + (ordemCresc.indexOf(w.inicio) + 1)));
+        h.appendChild(el("span","range", curto(w.inicio) + " – " + curto(fimSemana(w.inicio))));
+        h.appendChild(el("span","tag" + (w.inicio === semanaAtual ? " live" : ""), w.inicio === semanaAtual ? "em andamento" : "fechada"));
+        card.appendChild(h);
+
+        var ul = el("ul","standings");
+        JOGADORES.map(function(j){
+          var t = w.totals[j.id];
+          return {nome:j.nome, total: (typeof t === "number" && isFinite(t)) ? t : ENTRADA};
+        }).sort(function(a,b){ return b.total - a.total || a.nome.localeCompare(b.nome); })
+          .forEach(function(r, i){
+            var li = document.createElement("li");
+            if (i === 0) li.className = "first";
+            li.appendChild(el("span","pos", String(i+1)));
+            li.appendChild(el("span","nm", r.nome));
+            li.appendChild(el("span","fin num", fmt(r.total)));
+            var d = r.total - ENTRADA;
+            li.appendChild(el("span","res num " + (d > 0 ? "up" : d < 0 ? "down" : ""), sinal(d)));
+            ul.appendChild(li);
+          });
+        card.appendChild(ul);
+        box.appendChild(card);
+      });
+    }).catch(function(){
+      box.innerHTML = "";
+      box.appendChild(el("p","empty","Não foi possível carregar o histórico agora. Tente abrir a aba de novo."));
+    });
+  }
+
+
+  // data de hoje nos campos de dia
+  JOGADORES.forEach(function(j){ cards[j.id].dia.value = iso(new Date()); });
+})();
+</script>
+</body>
+</html>
