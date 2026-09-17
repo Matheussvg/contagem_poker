@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: mesa-dos-cinco
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/saude
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: MESA_USUARIO
+        value: admin
+      - key: MESA_SENHA
+        sync: false          # defina no painel do Render
+      # Para o placar sobreviver a reinícios, crie um Postgres no Render
+      # e ligue-o aqui (troque o nome se usar outro):
+      # - key: DATABASE_URL
+      #   fromDatabase:
+      #     name: mesa-dos-cinco-db
+      #     property: connectionString
+
+# databases:
+#   - name: mesa-dos-cinco-db
+#     plan: free
